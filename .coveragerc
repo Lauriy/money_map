@@ -1,0 +1,3 @@
+[run]
+source = money_map
+omit = money_map/test*

@@ -11,10 +11,14 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
 requires = [
     'colander',
     'deform',
+    'bcrypt',
     'pyramid',
     'pyramid_chameleon',
+    'pyramid_tm',
+    'sqlalchemy',
     'pyramid_debugtoolbar',
     'waitress',
+    'zope.sqlalchemy'
 ]
 
 tests_require = [
@@ -47,5 +51,7 @@ setup(name='money_map',
       entry_points="""\
       [paste.app_factory]
       main = money_map:main
+      [console_scripts]
+      initialize_money_map_db = money_map.initialize_db:main
       """,
       )

@@ -1,8 +1,11 @@
+import os
+
 from colander import SchemaNode, MappingSchema
 from deform import FileData, Form, ValidationFailure
 from deform.widget import FileUploadWidget
 
 from pyramid.httpexceptions import HTTPFound
+from pyramid.security import remember, forget
 from pyramid.view import view_config
 
 # pages = {
@@ -31,6 +34,55 @@ from pyramid.view import view_config
     #     form = deform.Form(schema, buttons=('submit',))
     #
     #     return self.render_form(form, success=tmpstore.clear)
+from money_map.security import USERS, check_password
+
+
+class AuthenticationViews:
+    def __init__(self, request):
+        self.request = request
+        self.logged_in = request.authenticated_userid
+
+    @view_config(route_name='home')
+    def home(self):
+        return {'name': 'Home View'}
+
+    @view_config(route_name='login', renderer='login.pt')
+    def login(self):
+        request = self.request
+        login_url = request.route_url('login')
+        referrer = request.url
+        if referrer == login_url:
+            referrer = '/'  # never use login form itself as came_from
+        came_from = request.params.get('came_from', referrer)
+        message = ''
+        login = ''
+        password = ''
+        if 'form.submitted' in request.params:
+            login = request.params['login']
+            password = request.params['password']
+            hashed_pw = USERS.get(login)
+            if hashed_pw and check_password(password, hashed_pw):
+                headers = remember(request, login)
+                return HTTPFound(location=came_from,
+                                 headers=headers)
+            message = 'Failed login'
+
+        return dict(
+            name='Login',
+            message=message,
+            url=request.application_url + '/login',
+            came_from=came_from,
+            login=login,
+            password=password,
+        )
+
+    @view_config(route_name='logout')
+    def logout(self):
+        request = self.request
+        headers = forget(request)
+        url = request.route_url('home')
+        return HTTPFound(location=url,
+                         headers=headers)
 
 class BankAccountStatement(MappingSchema):
     class Store(dict):
@@ -70,6 +122,13 @@ class BankAccountStatementViews(object):
             #     uid=new_uid, title=appstruct['title'],
             #     body=appstruct['body']
             # )
+
+            f = appstruct['file']
+            bank_account_statement_filename = f['filename']
+            bank_account_statement_extension = os.path.splitext(bank_account_statement_filename)[1]
+            bank_account_statement_file = f['fp']
+
+            print (bank_account_statement_file)
 
             # Now visit new page
             #url = self.request.route_url('wikipage_view', uid=new_uid)

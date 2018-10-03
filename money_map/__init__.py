@@ -23,9 +23,11 @@ def main(global_config, **settings):
     config.set_authorization_policy(authz_policy)
 
     config.add_static_view('static', 'static', cache_max_age=3600)
+    config.add_translation_dirs('money_map:locale/')
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
     config.add_route('home', '/')
+    config.add_route('hello', '/hello')
     config.add_route('bank_account_statement_upload', '/bank-account-statement-upload')
     # config.add_route('wiki_view', '/')
     # config.add_route('wikipage_add', '/add')

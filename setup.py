@@ -18,7 +18,9 @@ requires = [
     'sqlalchemy',
     'pyramid_debugtoolbar',
     'waitress',
-    'zope.sqlalchemy'
+    'zope.sqlalchemy',
+    'Babel',
+    'lingua',
 ]
 
 tests_require = [
@@ -48,6 +50,10 @@ setup(name='money_map',
           'testing': tests_require,
       },
       install_requires=requires,
+      message_extractors={'.': [
+          ('**.py', 'lingua_python', None),
+          ('**.pt', 'lingua_xml', None),
+      ]},
       entry_points="""\
       [paste.app_factory]
       main = money_map:main

@@ -3,17 +3,34 @@ import os
 from colander import SchemaNode, MappingSchema
 from deform import FileData, Form, ValidationFailure
 from deform.widget import FileUploadWidget
-
 from pyramid.httpexceptions import HTTPFound
+from pyramid.i18n import TranslationStringFactory
 from pyramid.security import remember, forget
 from pyramid.view import view_config
+
+# @view_config(renderer='templates/form.pt', name='file')
+# @demonstrate('File Upload Widget')
+# def file(self):
+#     class Schema(colander.Schema):
+#         upload = colander.SchemaNode(
+#             deform.FileData(),
+#             widget=deform.widget.FileUploadWidget(tmpstore)
+#         )
+#
+#     schema = Schema()
+#     form = deform.Form(schema, buttons=('submit',))
+#
+#     return self.render_form(form, success=tmpstore.clear)
+from money_map.security import USERS, check_password
+
+_ = TranslationStringFactory('money_map')
+
 
 # pages = {
 #     '100': dict(uid='100', title='Page 100', body='<em>100</em>'),
 #     '101': dict(uid='101', title='Page 101', body='<em>101</em>'),
 #     '102': dict(uid='102', title='Page 102', body='<em>102</em>')
 # }
-
 # class WikiPage(colander.MappingSchema):
 #     title = colander.SchemaNode(colander.String())
 #     body = colander.SchemaNode(
@@ -21,32 +38,23 @@ from pyramid.view import view_config
 #         widget=deform.widget.RichTextWidget()
 #     )
 
-    # @view_config(renderer='templates/form.pt', name='file')
-    # @demonstrate('File Upload Widget')
-    # def file(self):
-    #     class Schema(colander.Schema):
-    #         upload = colander.SchemaNode(
-    #             deform.FileData(),
-    #             widget=deform.widget.FileUploadWidget(tmpstore)
-    #         )
-    #
-    #     schema = Schema()
-    #     form = deform.Form(schema, buttons=('submit',))
-    #
-    #     return self.render_form(form, success=tmpstore.clear)
-from money_map.security import USERS, check_password
-
-
 class AuthenticationViews:
     def __init__(self, request):
         self.request = request
         self.logged_in = request.authenticated_userid
 
-    @view_config(route_name='home')
+    # Cannot remove templates/
+    # https://docs.pylonsproject.org/projects/pyramid-cookbook/en/latest/pylons/templates.html#chameleon
+    @view_config(route_name='home', renderer='templates/home.pt')
     def home(self):
-        return {'name': 'Home View'}
+        ts = _('log-in')
+        return {'name': 'Home View', 'log_in': ts}
 
-    @view_config(route_name='login', renderer='login.pt')
+    @view_config(route_name='hello', permission='edit', renderer='templates/hello.pt')
+    def hello(self):
+        return {'name': 'Hello View'}
+
+    @view_config(route_name='login', renderer='templates/login.pt')
     def login(self):
         request = self.request
         login_url = request.route_url('login')
@@ -84,12 +92,14 @@ class AuthenticationViews:
         return HTTPFound(location=url,
                          headers=headers)
 
+
 class BankAccountStatement(MappingSchema):
     class Store(dict):
         def preview_url(self, name):
             return ''
 
     file = SchemaNode(FileData(), widget=FileUploadWidget(Store(), accept='text/xml'))
+
 
 class BankAccountStatementViews(object):
     def __init__(self, request):
@@ -128,16 +138,15 @@ class BankAccountStatementViews(object):
             bank_account_statement_extension = os.path.splitext(bank_account_statement_filename)[1]
             bank_account_statement_file = f['fp']
 
-            print (bank_account_statement_file)
+            print(bank_account_statement_file)
 
             # Now visit new page
-            #url = self.request.route_url('wikipage_view', uid=new_uid)
+            # url = self.request.route_url('wikipage_view', uid=new_uid)
             url = self.request.route_url('home')
 
             return HTTPFound(url)
 
         return dict(form=form)
-
 
 # class WikiViews(object):
 #     def __init__(self, request):
